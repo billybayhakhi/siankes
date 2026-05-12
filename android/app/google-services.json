@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "224889186136",
+    "project_id": "siankes",
+    "storage_bucket": "siankes.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:224889186136:android:b8493da5149336e44f672d",
+        "android_client_info": {
+          "package_name": "com.example.siankes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9Q-_EcS38cgvC1ZWyBYG1GccQ1VjuSA0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
