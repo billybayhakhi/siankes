@@ -49,36 +49,41 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                   padding: const EdgeInsets.all(20), itemCount: doctors.length,
                   itemBuilder: (ctx, i) {
                     final d = doctors[i];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: AppColors.shadowLight, blurRadius: 8)]),
-                      child: Row(children: [
-                        CircleAvatar(radius: 28, backgroundColor: AppColors.primarySurface, child: const Icon(Icons.person_rounded, color: AppColors.primary, size: 28)),
-                        const SizedBox(width: 14),
-                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(d.name, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
-                          Text(d.specialization, style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary)),
-                          const SizedBox(height: 6),
-                          Row(children: [
-                            const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
-                            Text(' ${d.rating}', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600)),
-                            Text(' • ${d.experience}', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary)),
+                    return GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, '/doctor-detail', arguments: d),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: AppColors.shadowLight, blurRadius: 8)]),
+                        child: Row(children: [
+                          CircleAvatar(radius: 28, backgroundColor: AppColors.primarySurface, child: const Icon(Icons.person_rounded, color: AppColors.primary, size: 28)),
+                          const SizedBox(width: 14),
+                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(d.name, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
+                            Text(d.specialization, style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary)),
+                            const SizedBox(height: 6),
+                            Row(children: [
+                              const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                              Text(' ${d.rating}', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600)),
+                              Text(' • ${d.experience}', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary)),
+                            ]),
+                            const SizedBox(height: 4),
+                            Row(children: [
+                              Icon(Icons.schedule_rounded, size: 13, color: AppColors.textTertiary),
+                              const SizedBox(width: 4),
+                              Expanded(child: Text(d.schedule, style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textTertiary))),
+                            ]),
+                          ])),
+                          Column(children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(color: d.isAvailable ? AppColors.successLight : AppColors.errorLight, borderRadius: BorderRadius.circular(8)),
+                              child: Text(d.isAvailable ? 'Tersedia' : 'Penuh', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w700, color: d.isAvailable ? AppColors.success : AppColors.error)),
+                            ),
+                            const SizedBox(height: 6),
+                            const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary, size: 18),
                           ]),
-                          const SizedBox(height: 4),
-                          Row(children: [
-                            Icon(Icons.schedule_rounded, size: 13, color: AppColors.textTertiary),
-                            const SizedBox(width: 4),
-                            Expanded(child: Text(d.schedule, style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textTertiary))),
-                          ]),
-                        ])),
-                        Column(children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: d.isAvailable ? AppColors.successLight : AppColors.errorLight, borderRadius: BorderRadius.circular(8)),
-                            child: Text(d.isAvailable ? 'Tersedia' : 'Tidak Tersedia', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w700, color: d.isAvailable ? AppColors.success : AppColors.error)),
-                          ),
                         ]),
-                      ]),
+                      ),
                     );
                   },
                 ),

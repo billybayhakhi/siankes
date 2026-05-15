@@ -8,15 +8,17 @@ import 'package:siankes/presentation/screens/home/home_screen.dart';
 import 'package:siankes/presentation/screens/queue/take_queue_screen.dart';
 import 'package:siankes/presentation/screens/queue/queue_status_screen.dart';
 import 'package:siankes/presentation/screens/booking/booking_screen.dart';
-import 'package:siankes/presentation/screens/doctor/doctor_list_screen.dart';
+import 'package:siankes/presentation/screens/doctor/doctor_detail_screen.dart';
 import 'package:siankes/presentation/screens/polyclinic/polyclinic_list_screen.dart';
 import 'package:siankes/presentation/screens/history/history_detail_screen.dart';
 import 'package:siankes/presentation/screens/profile/edit_profile_screen.dart';
 import 'package:siankes/presentation/screens/admin/admin_dashboard_screen.dart';
 import 'package:siankes/presentation/screens/notifications/notifications_screen.dart';
 import 'package:siankes/presentation/screens/qr/scan_qr_screen.dart';
+import 'package:siankes/presentation/screens/doctor/doctor_list_screen.dart';
 import 'package:siankes/data/models/queue_model.dart';
 import 'package:siankes/data/models/booking_model.dart';
+import 'package:siankes/data/models/doctor_model.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -38,6 +40,9 @@ class AppRouter {
       case '/queue-status':
         final queue = settings.arguments as QueueModel;
         return _buildRoute(QueueStatusScreen(queue: queue), settings);
+      case '/doctor-detail':
+        final doctor = settings.arguments as DoctorModel;
+        return _buildRoute(DoctorDetailScreen(doctor: doctor), settings);
       case '/booking':
         return _buildRoute(const BookingScreen(), settings);
       case '/doctors':
