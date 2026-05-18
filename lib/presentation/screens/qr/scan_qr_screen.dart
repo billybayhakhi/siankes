@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siankes/core/theme/app_colors.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 // Use conditional logic to avoid web/Windows crash
 
@@ -217,7 +218,6 @@ class _ManualQREntryState extends State<_ManualQREntry> {
 }
 
 // ── Mobile-only scanner (only loaded when _isMobile == true) ─────────────
-import 'package:mobile_scanner/mobile_scanner.dart';
 
 class _MobileScannerView extends StatefulWidget {
   @override
