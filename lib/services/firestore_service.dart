@@ -173,7 +173,7 @@ class FirestoreService {
       await _notifService.sendNotification(
         userId: prevQueue.userId,
         title: '✅ Pelayanan Selesai',
-        body: 'Antrian ${prevQueue.queueNumber} di ${prevQueue.poliName} telah selesai. Terima kasih.',
+        body: 'Antrian ${prevQueue.queueNumber} di ${prevQueue.poliName} telah selesai. Terima kasih, semoga lekas sembuh!',
         type: 'queue',
       );
     }
