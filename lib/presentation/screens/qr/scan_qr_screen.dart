@@ -217,43 +217,104 @@ class _ManualQREntryState extends State<_ManualQREntry> {
 }
 
 // ── Mobile-only scanner (only loaded when _isMobile == true) ─────────────
+import 'package:mobile_scanner/mobile_scanner.dart';
+
 class _MobileScannerView extends StatefulWidget {
   @override
   State<_MobileScannerView> createState() => _MobileScannerViewState();
 }
 
 class _MobileScannerViewState extends State<_MobileScannerView> {
-  // Import is conditional — on web this widget is never constructed
-  // dynamic _controller;
-  // bool _scanned = false;
+  final MobileScannerController _controller = MobileScannerController();
+  bool _scanned = false;
   bool _flashOn = false;
 
   @override
-  void initState() {
-    super.initState();
-    _initController();
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
-  void _initController() async {
-    // Lazy import only on mobile
-    final lib = await _loadMobileScanner();
-    if (lib != null && mounted) {
-      // setState(() => _controller = lib);
+  void _onDetect(BarcodeCapture capture) {
+    if (_scanned) return;
+    final List<Barcode> barcodes = capture.barcodes;
+    if (barcodes.isNotEmpty) {
+      final String? code = barcodes.first.rawValue;
+      if (code != null && code.startsWith('SIANKES|')) {
+        setState(() => _scanned = true);
+        final parts = code.split('|');
+        if (parts.length >= 4) {
+          _showResult(parts[2], parts[3], true);
+          return;
+        }
+      } else if (code != null) {
+        setState(() => _scanned = true);
+        _showResult('', '', false);
+      }
     }
   }
 
-  Future<dynamic> _loadMobileScanner() async {
-    try {
-      // Dynamic import to avoid web compilation errors
-      return null; // Placeholder — real mobile builds use the native import
-    } catch (_) {
-      return null;
-    }
+  void _showResult(String queueNumber, String poliId, bool valid) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 64, height: 64,
+            decoration: BoxDecoration(
+              color: valid ? AppColors.successLight : AppColors.errorLight,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              valid ? Icons.check_circle_rounded : Icons.cancel_rounded,
+              color: valid ? AppColors.success : AppColors.error, size: 40,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(valid ? 'QR Valid!' : 'QR Tidak Valid',
+              style: GoogleFonts.plusJakartaSans(
+                  fontSize: 20, fontWeight: FontWeight.w800)),
+          if (valid) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                  color: AppColors.primarySurface,
+                  borderRadius: BorderRadius.circular(14)),
+              child: Column(children: [
+                Text('Nomor Antrian',
+                    style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11, color: AppColors.textSecondary)),
+                Text(queueNumber,
+                    style: GoogleFonts.plusJakartaSans(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primary)),
+                Text('Poli: $poliId',
+                    style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13, color: AppColors.textSecondary)),
+              ]),
+            ),
+          ],
+        ]),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() => _scanned = false);
+            },
+            child: Text('Scan Lagi',
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Fallback — on a real device build this would render the camera
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -270,15 +331,17 @@ class _MobileScannerViewState extends State<_MobileScannerView> {
             icon: Icon(
                 _flashOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
                 color: Colors.white),
-            onPressed: () => setState(() => _flashOn = !_flashOn),
+            onPressed: () {
+              _controller.toggleTorch();
+              setState(() => _flashOn = !_flashOn);
+            },
           ),
         ],
       ),
       body: Stack(children: [
-        Container(
-          color: Colors.black87,
-          child: const Center(
-              child: CircularProgressIndicator(color: Colors.white)),
+        MobileScanner(
+          controller: _controller,
+          onDetect: _onDetect,
         ),
         Center(
           child: Column(
@@ -292,11 +355,18 @@ class _MobileScannerViewState extends State<_MobileScannerView> {
                 child: const _ScanLine(),
               ),
               const SizedBox(height: 30),
-              Text('Arahkan kamera ke QR Code antrian',
-                  style: GoogleFonts.plusJakartaSans(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text('Arahkan kamera ke QR Code antrian',
+                    style: GoogleFonts.plusJakartaSans(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500)),
+              ),
             ],
           ),
         ),
