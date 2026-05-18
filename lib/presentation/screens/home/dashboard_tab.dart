@@ -8,6 +8,7 @@ import 'package:siankes/presentation/providers/auth_provider.dart';
 import 'package:siankes/presentation/providers/queue_provider.dart';
 import 'package:siankes/presentation/providers/booking_provider.dart';
 import 'package:siankes/presentation/providers/notification_provider.dart';
+import 'package:siankes/presentation/screens/home/health_article_screen.dart';
 import '../../widgets/shared_widgets.dart';
 
 class DashboardTab extends StatelessWidget {
@@ -38,11 +39,39 @@ class DashboardTab extends StatelessWidget {
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    FadeInLeft(child: Text('Halo, Selamat Datang! 👋', style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 13))),
-                    const SizedBox(height: 4),
-                    FadeInLeft(delay: const Duration(milliseconds: 200), child: Text(user?.name ?? 'Pengguna', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis)),
-                  ])),
+                  Expanded(
+                    child: Row(children: [
+                      FadeInLeft(
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset('assets/images/logo.png', fit: BoxFit.cover),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          FadeInLeft(child: Text('Halo, Selamat Datang! 👋', style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 13))),
+                          const SizedBox(height: 4),
+                          FadeInLeft(delay: const Duration(milliseconds: 200), child: Text(user?.name ?? 'Pengguna', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis)),
+                        ]),
+                      ),
+                    ]),
+                  ),
                   Row(children: [
                     _headerIconBadge(Icons.notifications_outlined, () => Navigator.pushNamed(context, '/notifications'), notifProv.unreadCount),
                     const SizedBox(width: 8),
@@ -175,14 +204,14 @@ class DashboardTab extends StatelessWidget {
                 SizedBox(
                   height: 150,
                   child: ListView(scrollDirection: Axis.horizontal, children: [
-                    _healthCard('Cuci Tangan', 'Pentingnya mencuci tangan dengan sabun untuk mencegah penyakit', Icons.clean_hands_rounded, AppColors.primary),
-                    _healthCard('Vaksinasi', 'Jadwal vaksinasi anak dan dewasa tersedia di klinik', Icons.vaccines_rounded, AppColors.secondary),
-                    _healthCard('Pola Hidup Sehat', 'Tips menjaga pola hidup sehat setiap hari', Icons.favorite_rounded, const Color(0xFFE91E63)),
+                    _healthCard(context, 'Cuci Tangan', 'Pentingnya mencuci tangan dengan sabun untuk mencegah penyakit', Icons.clean_hands_rounded, AppColors.primary),
+                    _healthCard(context, 'Vaksinasi', 'Jadwal vaksinasi anak dan dewasa tersedia di klinik', Icons.vaccines_rounded, AppColors.secondary),
+                    _healthCard(context, 'Pola Hidup Sehat', 'Tips menjaga pola hidup sehat setiap hari', Icons.favorite_rounded, const Color(0xFFE91E63)),
                   ]),
                 ),
               ])),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 120), // Tambahkan padding bawah lebih luas
           ]),
         ),
       ),
@@ -238,20 +267,34 @@ class DashboardTab extends StatelessWidget {
     );
   }
 
-  Widget _healthCard(String title, String desc, IconData icon, Color color) {
-    return Container(
-      width: 220, margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
-        borderRadius: BorderRadius.circular(16),
+  Widget _healthCard(BuildContext ctx, String title, String desc, IconData icon, Color color) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          ctx, 
+          '/health-article',
+          arguments: HealthArticleArgs(
+            title: title,
+            description: desc,
+            icon: icon,
+            color: color,
+          ),
+        );
+      },
+      child: Container(
+        width: 220, margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Icon(icon, color: Colors.white, size: 28),
+          const SizedBox(height: 8),
+          Text(title, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
+          Text(desc, style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
+        ]),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Icon(icon, color: Colors.white, size: 28),
-        const SizedBox(height: 8),
-        Text(title, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
-        Text(desc, style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
-      ]),
     );
   }
 }

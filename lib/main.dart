@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -47,9 +48,19 @@ class SiankesApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(
-        title: 'SIANKES - Sistem Informasi Antrian Klinik',
+        title: 'SIANKES - Sistem Informasi Antrian Klinik Kesehatan',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('id', 'ID'), // Indonesian
+          Locale('en', 'US'), // English fallback
+        ],
+        locale: const Locale('id', 'ID'),
         initialRoute: '/',
         onGenerateRoute: AppRouter.generateRoute,
       ),

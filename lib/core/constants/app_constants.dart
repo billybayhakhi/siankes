@@ -4,7 +4,7 @@ class AppConstants {
 
   // ─── App Info ───
   static const String appName = 'SIANKES';
-  static const String appFullName = 'Sistem Informasi Antrian Klinik';
+  static const String appFullName = 'Sistem Informasi Antrian Klinik Kesehatan';
   static const String appVersion = '2.0.0';
   static const String appTagline = 'Antrian Klinik Modern & Realtime';
   static const String clinicName = 'Klinik Sehat Sejahtera';

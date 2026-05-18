@@ -96,11 +96,14 @@ class AppTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final int maxLines;
   final bool enabled;
+  final bool readOnly;
+  final VoidCallback? onTap;
 
   const AppTextField({
     super.key, required this.controller, required this.label,
     this.hint, this.prefixIcon, this.suffix, this.obscure = false,
     this.keyboardType, this.validator, this.maxLines = 1, this.enabled = true,
+    this.readOnly = false, this.onTap,
   });
 
   @override
@@ -113,7 +116,7 @@ class AppTextField extends StatelessWidget {
         TextFormField(
           controller: controller, obscureText: obscure,
           keyboardType: keyboardType, validator: validator,
-          maxLines: maxLines, enabled: enabled,
+          maxLines: maxLines, enabled: enabled, readOnly: readOnly, onTap: onTap,
           style: GoogleFonts.plusJakartaSans(fontSize: 14, color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: hint ?? label,
@@ -211,10 +214,11 @@ class EmptyStateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: const EdgeInsets.all(24),

@@ -314,6 +314,13 @@ class FirestoreService {
         .map((snap) => snap.docs.map((d) => BookingModel.fromFirestore(d)).toList());
   }
 
+  Stream<List<BookingModel>> allBookingsStream() {
+    return _db.collection(AppConstants.colBookings)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => BookingModel.fromFirestore(d)).toList());
+  }
+
   Future<void> cancelBooking(String bookingId) async {
     await _db.collection(AppConstants.colBookings).doc(bookingId).update({'status': 'cancelled'});
   }

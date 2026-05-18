@@ -8,10 +8,12 @@ class BookingProvider extends ChangeNotifier {
   final FirestoreService _service = FirestoreService();
 
   List<BookingModel> _bookings = [];
+  List<BookingModel> _adminBookings = [];
   List<DoctorModel> _doctors = [];
   bool _isLoading = false;
 
   List<BookingModel> get bookings => _bookings;
+  List<BookingModel> get adminBookings => _adminBookings;
   List<DoctorModel> get doctors => _doctors;
   bool get isLoading => _isLoading;
 
@@ -28,6 +30,14 @@ class BookingProvider extends ChangeNotifier {
     _bookingSub?.cancel();
     _bookingSub = _service.userBookingsStream(userId).listen((data) {
       _bookings = data;
+      notifyListeners();
+    });
+  }
+
+  void adminInitStreams() {
+    _bookingSub?.cancel();
+    _bookingSub = _service.allBookingsStream().listen((data) {
+      _adminBookings = data;
       notifyListeners();
     });
   }
@@ -68,6 +78,14 @@ class BookingProvider extends ChangeNotifier {
 
   List<BookingModel> get upcomingBookings =>
       _bookings.where((b) => b.isPending || b.isConfirmed).toList();
+
+  Future<void> confirmBooking(String id) async {
+    await _service.confirmBooking(id);
+  }
+
+  Future<void> completeBooking(String id) async {
+    await _service.completeBooking(id);
+  }
 
   @override
   void dispose() {

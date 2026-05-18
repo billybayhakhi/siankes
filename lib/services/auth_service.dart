@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../data/models/user_model.dart';
 import '../core/constants/app_constants.dart';
 
@@ -9,6 +11,16 @@ class AuthService {
 
   User? get currentUser => _auth.currentUser;
   Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // Track whether GoogleSignIn.instance.initialize() has been called
+  bool _googleSignInInitialized = false;
+
+  Future<void> _initGoogleSignIn() async {
+    if (!_googleSignInInitialized) {
+      await GoogleSignIn.instance.initialize();
+      _googleSignInInitialized = true;
+    }
+  }
 
   /// Register new user with email & password, then save profile to Firestore
   Future<UserModel> register({
@@ -73,6 +85,81 @@ class AuthService {
     return userModel;
   }
 
+  /// Login with Google — menggunakan google_sign_in v7.x API
+  Future<UserModel?> signInWithGoogle() async {
+    try {
+      User? user;
+
+      if (kIsWeb) {
+        final GoogleAuthProvider authProvider = GoogleAuthProvider();
+        final UserCredential userCredential =
+            await _auth.signInWithPopup(authProvider);
+        user = userCredential.user;
+      } else {
+        // Inisialisasi GoogleSignIn singleton (hanya sekali)
+        await _initGoogleSignIn();
+
+        // Tampilkan dialog pilih akun Google (interactive)
+        final GoogleSignInAccount googleUser =
+            await GoogleSignIn.instance.authenticate();
+
+        // Ambil idToken
+        final GoogleSignInAuthentication googleAuth =
+            googleUser.authentication;
+
+        if (googleAuth.idToken == null) {
+          throw Exception('Gagal mendapatkan idToken dari Google.');
+        }
+
+        // Ambil accessToken (opsional di v7, terpisah dari idToken)
+        String? accessToken;
+        try {
+          final authz = await googleUser.authorizationClient
+              .authorizeScopes(['email', 'profile']);
+          accessToken = authz.accessToken;
+        } catch (_) {
+          // accessToken tidak wajib, lanjut dengan idToken saja
+        }
+
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          idToken: googleAuth.idToken,
+          accessToken: accessToken,
+        );
+
+        final UserCredential userCredential =
+            await _auth.signInWithCredential(credential);
+        user = userCredential.user;
+      }
+
+      if (user != null) {
+        final doc = await _firestore
+            .collection(AppConstants.colUsers)
+            .doc(user.uid)
+            .get();
+
+        if (doc.exists) {
+          return UserModel.fromFirestore(doc);
+        }
+
+        final userModel = UserModel(
+          uid: user.uid,
+          name: user.displayName ?? 'Pengguna',
+          email: user.email ?? '',
+          role: user.email == AppConstants.adminEmail ? 'admin' : 'user',
+        );
+
+        await _firestore
+            .collection(AppConstants.colUsers)
+            .doc(user.uid)
+            .set(userModel.toMap());
+        return userModel;
+      }
+      return null;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Get current user profile from Firestore
   Future<UserModel?> getCurrentUserProfile() async {
     final user = _auth.currentUser;
@@ -100,8 +187,13 @@ class AuthService {
     await _auth.sendPasswordResetEmail(email: email.trim());
   }
 
-  /// Logout
+  /// Logout — sign out dari Google dan Firebase
   Future<void> logout() async {
+    try {
+      if (_googleSignInInitialized) {
+        await GoogleSignIn.instance.signOut();
+      }
+    } catch (_) {}
     await _auth.signOut();
   }
 

@@ -62,6 +62,39 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> loginWithGoogle() async {
+    _state = AuthState.loading;
+    _errorMessage = '';
+    notifyListeners();
+    try {
+      _user = await _authService.signInWithGoogle();
+      if (_user != null) {
+        _state = AuthState.authenticated;
+        notifyListeners();
+        return true;
+      } else {
+        _state = AuthState.unauthenticated;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      // Tampilkan error asli untuk memudahkan debugging
+      final msg = e.toString();
+      if (msg.contains('sign_in_cancelled') || msg.contains('canceled')) {
+        _errorMessage = '';  // User cancel, tidak perlu error
+      } else if (msg.contains('network_error') || msg.contains('SocketException')) {
+        _errorMessage = 'Tidak ada koneksi internet.';
+      } else if (msg.contains('sign_in_failed') || msg.contains('ApiException: 10')) {
+        _errorMessage = 'Google Sign-In gagal. Pastikan SHA-1 sudah didaftarkan di Firebase Console.';
+      } else {
+        _errorMessage = 'Gagal login dengan Google: $msg';
+      }
+      _state = AuthState.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> register({
     required String name, required String email,
     required String phone, required String password,
@@ -73,7 +106,9 @@ class AuthProvider extends ChangeNotifier {
       _user = await _authService.register(
         name: name, email: email, phone: phone, password: password,
       );
-      _state = AuthState.authenticated;
+      await _authService.logout();
+      _user = null;
+      _state = AuthState.unauthenticated;
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
@@ -82,7 +117,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (e) {
-      _errorMessage = 'Terjadi kesalahan saat mendaftar.';
+      _errorMessage = 'Terjadi kesalahan saat mendaftar: $e';
       _state = AuthState.error;
       notifyListeners();
       return false;

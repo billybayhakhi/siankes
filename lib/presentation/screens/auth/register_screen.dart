@@ -30,7 +30,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final ok = await auth.register(name: _nameCtrl.text, email: _emailCtrl.text, phone: _phoneCtrl.text, password: _passCtrl.text);
     if (!mounted) return;
     if (ok) {
-      Navigator.pushReplacementNamed(context, '/home');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pendaftaran berhasil! Silakan login.'), backgroundColor: AppColors.success));
+      Navigator.pushReplacementNamed(context, '/login');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(auth.errorMessage), backgroundColor: AppColors.error));
     }

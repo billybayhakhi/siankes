@@ -5,7 +5,10 @@ import 'package:siankes/core/theme/app_colors.dart';
 import 'package:siankes/core/utils/validators.dart';
 import 'package:siankes/presentation/providers/auth_provider.dart';
 import '../../widgets/shared_widgets.dart';
-
+import 'dart:io';
+import 'dart:convert';
+import 'package:flutter/foundation.dart'; // for kIsWeb
+import 'package:image_picker/image_picker.dart';
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
   @override
@@ -20,6 +23,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _dobCtrl;
   String _gender = '';
   bool _saving = false;
+  bool _uploadingImage = false;
+  String _currentPhotoUrl = '';
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -30,6 +36,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _addressCtrl = TextEditingController(text: user?.address ?? '');
     _dobCtrl = TextEditingController(text: user?.dateOfBirth ?? '');
     _gender = user?.gender ?? '';
+    _currentPhotoUrl = user?.photoUrl ?? '';
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 300,
+        maxHeight: 300,
+        imageQuality: 60,
+      );
+      if (image == null) return;
+
+      setState(() => _uploadingImage = true);
+
+      final bytes = await image.readAsBytes();
+      final base64String = base64Encode(bytes);
+      final ext = image.name.split('.').last.toLowerCase();
+      final mimeType = ext == 'png' ? 'image/png' : 'image/jpeg';
+      final dataUri = 'data:$mimeType;base64,$base64String';
+
+      setState(() {
+        _currentPhotoUrl = dataUri;
+        _uploadingImage = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Foto berhasil diunggah'), backgroundColor: AppColors.success));
+      }
+    } catch (e) {
+      setState(() => _uploadingImage = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Gagal mengunggah foto: $e'), backgroundColor: AppColors.error));
+      }
+    }
   }
 
   Future<void> _save() async {
@@ -39,13 +82,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final updated = auth.user!.copyWith(
       name: _nameCtrl.text.trim(), phone: _phoneCtrl.text.trim(),
       address: _addressCtrl.text.trim(), dateOfBirth: _dobCtrl.text.trim(),
-      gender: _gender,
+      gender: _gender, photoUrl: _currentPhotoUrl,
     );
     await auth.updateProfile(updated);
     setState(() => _saving = false);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profil berhasil diperbarui'), backgroundColor: AppColors.success));
       Navigator.pop(context);
+    }
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _dobCtrl.text = "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+      });
     }
   }
 
@@ -61,12 +130,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           Center(child: Stack(children: [
             Container(
               width: 90, height: 90,
-              decoration: BoxDecoration(color: AppColors.primarySurface, shape: BoxShape.circle, border: Border.all(color: AppColors.primary, width: 3)),
-              child: const Icon(Icons.person_rounded, size: 44, color: AppColors.primary),
+              decoration: BoxDecoration(
+                  color: AppColors.primarySurface, 
+                  shape: BoxShape.circle, 
+                  border: Border.all(color: AppColors.primary, width: 3),
+                  image: _currentPhotoUrl.isNotEmpty
+                      ? DecorationImage(
+                          image: _currentPhotoUrl.startsWith('data:image')
+                              ? MemoryImage(base64Decode(_currentPhotoUrl.split(',').last)) as ImageProvider
+                              : NetworkImage(_currentPhotoUrl),
+                          fit: BoxFit.cover)
+                      : null,
+              ),
+              child: _currentPhotoUrl.isEmpty
+                  ? const Icon(Icons.person_rounded, size: 44, color: AppColors.primary)
+                  : null,
             ),
-            Positioned(bottom: 0, right: 0, child: Container(
-              padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-              child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16),
+            if (_uploadingImage)
+              const Positioned.fill(
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              ),
+            Positioned(bottom: 0, right: 0, child: GestureDetector(
+              onTap: _pickAndUploadImage,
+              child: Container(
+                padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16),
+              ),
             )),
           ])),
           const SizedBox(height: 28),
@@ -76,7 +167,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           const SizedBox(height: 16),
           AppTextField(controller: _addressCtrl, label: 'Alamat', prefixIcon: Icons.location_on_outlined, maxLines: 2),
           const SizedBox(height: 16),
-          AppTextField(controller: _dobCtrl, label: 'Tanggal Lahir', hint: 'DD/MM/YYYY', prefixIcon: Icons.cake_outlined),
+          AppTextField(
+            controller: _dobCtrl, 
+            label: 'Tanggal Lahir', 
+            hint: 'DD/MM/YYYY', 
+            prefixIcon: Icons.cake_outlined,
+            readOnly: true,
+            onTap: _selectDate,
+          ),
           const SizedBox(height: 16),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Jenis Kelamin', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600)),

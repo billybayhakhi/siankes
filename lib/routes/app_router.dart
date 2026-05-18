@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:siankes/presentation/screens/home/health_article_screen.dart';
 import 'package:siankes/presentation/screens/splash/splash_screen.dart';
 import 'package:siankes/presentation/screens/onboarding/onboarding_screen.dart';
 import 'package:siankes/presentation/screens/auth/login_screen.dart';
@@ -63,6 +64,9 @@ class AppRouter {
         return _buildRoute(const NotificationsScreen(), settings);
       case '/scan-qr':
         return _buildRoute(const ScanQRScreen(), settings);
+      case '/health-article':
+        final args = settings.arguments as HealthArticleArgs;
+        return _buildRoute(HealthArticleScreen(args: args), settings);
       default:
         return _buildRoute(const SplashScreen(), settings);
     }
