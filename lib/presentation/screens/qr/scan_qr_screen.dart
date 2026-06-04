@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siankes/core/theme/app_colors.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:image_picker/image_picker.dart';
 
 // Use conditional logic to avoid web/Windows crash
 
@@ -327,6 +328,25 @@ class _MobileScannerViewState extends State<_MobileScannerView> {
             style: GoogleFonts.plusJakartaSans(
                 color: Colors.white, fontWeight: FontWeight.w700)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.image_rounded, color: Colors.white),
+            tooltip: 'Pilih dari Galeri (Screenshot)',
+            onPressed: () async {
+              final picker = ImagePicker();
+              final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+              if (image != null) {
+                final BarcodeCapture? capture = await _controller.analyzeImage(image.path);
+                if (capture != null && capture.barcodes.isNotEmpty) {
+                  _onDetect(capture);
+                } else {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Tidak ada QR Code ditemukan pada gambar ini.'), backgroundColor: AppColors.error),
+                  );
+                }
+              }
+            },
+          ),
           IconButton(
             icon: Icon(
                 _flashOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,

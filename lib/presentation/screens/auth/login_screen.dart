@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,8 +21,56 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passCtrl = TextEditingController();
   bool _obscure = true;
 
+  // News Carousel variables
+  final PageController _pageCtrl = PageController();
+  Timer? _carouselTimer;
+  int _currentNewsIndex = 0;
+
+  final List<Map<String, dynamic>> _newsItems = [
+    {
+      'icon': Icons.insights_rounded,
+      'title': 'Pantau Antrian Real-time',
+      'desc': 'Kini Anda bisa memantau nomor antrian secara live dari rumah tanpa perlu menunggu lama di klinik.',
+    },
+    {
+      'icon': Icons.calendar_month_rounded,
+      'title': 'Booking Jadwal Dokter',
+      'desc': 'Hindari antrian dengan melakukan booking jadwal dokter spesialis jauh-jauh hari melalui aplikasi SIANKES.',
+    },
+    {
+      'icon': Icons.qr_code_2_rounded,
+      'title': 'Digital ID Terintegrasi',
+      'desc': 'Gunakan QR Code Digital ID Anda untuk mempercepat layanan saat menebus obat di Farmasi dan Kasir.',
+    },
+  ];
+
   @override
-  void dispose() { _emailCtrl.dispose(); _passCtrl.dispose(); super.dispose(); }
+  void initState() {
+    super.initState();
+    _startCarousel();
+  }
+
+  void _startCarousel() {
+    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_pageCtrl.hasClients) {
+        _currentNewsIndex = (_currentNewsIndex + 1) % _newsItems.length;
+        _pageCtrl.animateToPage(
+          _currentNewsIndex,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOutQuart,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() { 
+    _carouselTimer?.cancel();
+    _pageCtrl.dispose();
+    _emailCtrl.dispose(); 
+    _passCtrl.dispose(); 
+    super.dispose(); 
+  }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
@@ -139,13 +188,87 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   )),
                   const SizedBox(height: 24),
-
+                  _buildNewsBanner(),
                   const SizedBox(height: 30),
                 ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildNewsBanner() {
+    return FadeInUp(
+      delay: const Duration(milliseconds: 600),
+      child: Column(
+        children: [
+          Container(
+            height: 100, // Fixed height for carousel
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.3)),
+            ),
+            child: PageView.builder(
+              controller: _pageCtrl,
+              onPageChanged: (idx) => setState(() => _currentNewsIndex = idx),
+              itemCount: _newsItems.length,
+              itemBuilder: (context, index) {
+                final item = _newsItems[index];
+                return Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(item['icon'] as IconData, color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(item['title'] as String, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
+                          const SizedBox(height: 4),
+                          Text(
+                            item['desc'] as String,
+                            style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 11, height: 1.4),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Dot indicators
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              _newsItems.length,
+              (index) => AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: _currentNewsIndex == index ? 20 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: _currentNewsIndex == index ? Colors.white : Colors.white.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

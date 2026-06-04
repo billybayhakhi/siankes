@@ -60,76 +60,111 @@ class NotificationsScreen extends StatelessWidget {
           ? const EmptyStateWidget(icon: Icons.notifications_off_outlined, title: 'Belum Login', subtitle: 'Login untuk melihat notifikasi')
           : notifications.isEmpty
               ? const EmptyStateWidget(icon: Icons.notifications_none_rounded, title: 'Belum Ada Notifikasi', subtitle: 'Notifikasi akan muncul di sini')
-              : RefreshIndicator(
-                  onRefresh: () async {},
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: notifications.length,
-                    itemBuilder: (ctx, i) {
-                      final notif = notifications[i];
-                      return FadeInUp(
-                        delay: Duration(milliseconds: i * 50),
-                        child: Dismissible(
-                          key: Key(notif.id),
-                          direction: DismissDirection.endToStart,
-                          background: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
-                            margin: const EdgeInsets.only(bottom: 10),
-                            decoration: BoxDecoration(color: AppColors.error, borderRadius: BorderRadius.circular(16)),
-                            child: const Icon(Icons.delete_rounded, color: Colors.white),
-                          ),
-                          onDismissed: (_) => notifProv.deleteNotification(notif.id),
-                          child: GestureDetector(
-                            onTap: () {
-                              if (!notif.isRead) notifProv.markAsRead(notif.id);
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: notif.isRead ? Colors.white : AppColors.primarySurface,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [BoxShadow(color: AppColors.shadowLight, blurRadius: 6)],
-                                border: notif.isRead ? null : Border.all(color: AppColors.primary.withOpacity(0.2)),
-                              ),
-                              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: _iconBg(notif.type, notif.isRead),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(_icon(notif.type), color: _iconColor(notif.type, notif.isRead), size: 20),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Row(children: [
-                                    Expanded(child: Text(notif.title, style: GoogleFonts.plusJakartaSans(
-                                      fontWeight: notif.isRead ? FontWeight.w600 : FontWeight.w700, fontSize: 14,
-                                    ))),
-                                    if (!notif.isRead) Container(
-                                      width: 8, height: 8,
-                                      decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                                    ),
-                                  ]),
-                                  const SizedBox(height: 4),
-                                  Text(notif.body, style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13, color: AppColors.textSecondary, height: 1.4,
-                                  )),
-                                  const SizedBox(height: 6),
-                                  Text(DateFormatter.timeAgo(notif.createdAt), style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 11, color: AppColors.textTertiary,
-                                  )),
-                                ])),
-                              ]),
-                            ),
-                          ),
+              : Column(children: [
+                  // Summary bar
+                  if (notifProv.hasUnread)
+                    Container(
+                      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.25), blurRadius: 10, offset: const Offset(0, 4))],
+                      ),
+                      child: Row(children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                          child: const Icon(Icons.mark_chat_unread_rounded, color: Colors.white, size: 18),
                         ),
-                      );
-                    },
+                        const SizedBox(width: 12),
+                        Expanded(child: Text(
+                          'Anda memiliki ${notifProv.unreadCount} notifikasi belum dibaca',
+                          style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                        )),
+                        GestureDetector(
+                          onTap: () => notifProv.markAllAsRead(auth.user!.uid),
+                          child: Text('Baca Semua', style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600, decoration: TextDecoration.underline, decorationColor: Colors.white54)),
+                        ),
+                      ]),
+                    ),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () async {},
+                      child: ListView.builder(
+                        padding: EdgeInsets.fromLTRB(20, notifProv.hasUnread ? 12 : 20, 20, 20),
+                        itemCount: notifications.length,
+                        itemBuilder: (ctx, i) {
+                          final notif = notifications[i];
+                          return FadeInUp(
+                            delay: Duration(milliseconds: i * 50),
+                            child: Dismissible(
+                              key: Key(notif.id),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(right: 20),
+                                margin: const EdgeInsets.only(bottom: 10),
+                                decoration: BoxDecoration(color: AppColors.error, borderRadius: BorderRadius.circular(16)),
+                                child: const Icon(Icons.delete_rounded, color: Colors.white),
+                              ),
+                              onDismissed: (_) => notifProv.deleteNotification(notif.id),
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (!notif.isRead) notifProv.markAsRead(notif.id);
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 10),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: notif.isRead ? Colors.white : AppColors.primarySurface,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [BoxShadow(color: AppColors.shadowLight, blurRadius: 8, offset: const Offset(0, 3))],
+                                    border: notif.isRead ? Border.all(color: AppColors.border, width: 0.5) : Border.all(color: AppColors.primary.withOpacity(0.25), width: 1.5),
+                                  ),
+                                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: _iconBg(notif.type, notif.isRead),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(_icon(notif.type), color: _iconColor(notif.type, notif.isRead), size: 20),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                      Row(children: [
+                                        Expanded(child: Text(notif.title, style: GoogleFonts.plusJakartaSans(
+                                          fontWeight: notif.isRead ? FontWeight.w600 : FontWeight.w800, fontSize: 14,
+                                        ))),
+                                        if (!notif.isRead) Container(
+                                          width: 8, height: 8,
+                                          decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                                        ),
+                                      ]),
+                                      const SizedBox(height: 4),
+                                      Text(notif.body, style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 13, color: AppColors.textSecondary, height: 1.4,
+                                      )),
+                                      const SizedBox(height: 8),
+                                      Row(children: [
+                                        Icon(Icons.access_time_rounded, size: 12, color: AppColors.textTertiary),
+                                        const SizedBox(width: 4),
+                                        Text(DateFormatter.timeAgo(notif.createdAt), style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 11, color: AppColors.textTertiary,
+                                        )),
+                                      ]),
+                                    ])),
+                                  ]),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                ),
+                ]),
     );
   }
 

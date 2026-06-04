@@ -89,7 +89,27 @@ class QueueTab extends StatelessWidget {
                               ]),
                               const SizedBox(height: 8),
                               if (q.isWaiting) OutlinedButton(
-                                onPressed: () => queue.cancelQueue(q.id),
+                                onPressed: () => showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    title: Text('Batalkan Antrian?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                                    content: Text('Anda yakin ingin membatalkan antrian ${q.queueNumber}?', style: GoogleFonts.plusJakartaSans()),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: Text('Tidak', style: GoogleFonts.plusJakartaSans()),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          queue.cancelQueue(q.id);
+                                          Navigator.pop(ctx);
+                                        },
+                                        child: Text('Ya, Batalkan', style: GoogleFonts.plusJakartaSans(color: Colors.red, fontWeight: FontWeight.w700)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white54)),
                                 child: Text('Batalkan Antrian', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
                               ),

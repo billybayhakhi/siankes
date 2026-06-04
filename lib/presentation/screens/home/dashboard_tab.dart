@@ -26,7 +26,11 @@ class DashboardTab extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: RefreshIndicator(
-        onRefresh: () async {},
+        onRefresh: () async {
+          // Streams are live (Firestore real-time) — just show indicator briefly
+          // The UI will already be in sync; no manual refresh needed
+          await Future.delayed(const Duration(milliseconds: 800));
+        },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -104,22 +108,32 @@ class DashboardTab extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: myActive.first.isCalled ? AppColors.successGradient : AppColors.cardGradient,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.25), blurRadius: 16, offset: const Offset(0, 8))],
+                    boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 8))],
                   ),
                   child: Row(children: [
                     Container(
                       width: 64, height: 64,
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5)),
                       child: Center(child: Text(myActive.first.queueNumber, style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white))),
                     ),
                     const SizedBox(width: 16),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Antrian Aktif', style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 12)),
+                      Row(children: [
+                        Container(width: 7, height: 7, decoration: BoxDecoration(color: myActive.first.isCalled ? Colors.greenAccent : Colors.white70, shape: BoxShape.circle)),
+                        const SizedBox(width: 6),
+                        Text(myActive.first.isCalled ? 'DIPANGGIL' : 'ANTRIAN AKTIF', style: GoogleFonts.plusJakartaSans(color: Colors.white60, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.8)),
+                      ]),
                       const SizedBox(height: 4),
-                      Text(myActive.first.poliName, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
-                      Text(myActive.first.isCalled ? '🔔 Silakan masuk!' : '⏳ Menunggu giliran', style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 12)),
+                      Text(myActive.first.poliName, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 2),
+                      Text(myActive.first.isCalled ? '🔔 Silakan masuk ke ruangan!' : '⏳ Mohon tunggu giliran Anda', style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 12)),
                     ])),
-                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                      child: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+                    ),
                   ]),
                 ),
               )),
@@ -131,11 +145,12 @@ class DashboardTab extends StatelessWidget {
               child: FadeInUp(delay: const Duration(milliseconds: 200), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const SectionHeader(title: 'Layanan'),
                 const SizedBox(height: 14),
-                Row(children: [
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   _menuItem(context, Icons.confirmation_number_rounded, 'Ambil\nAntrian', AppColors.primary, () => Navigator.pushNamed(context, '/take-queue')),
                   _menuItem(context, Icons.calendar_month_rounded, 'Booking\nJadwal', AppColors.secondary, () => Navigator.pushNamed(context, '/booking')),
                   _menuItem(context, Icons.medical_services_rounded, 'Daftar\nDokter', const Color(0xFF7B1FA2), () => Navigator.pushNamed(context, '/doctors')),
-                  _menuItem(context, Icons.qr_code_scanner_rounded, 'Scan\nQR', const Color(0xFF00897B), () => Navigator.pushNamed(context, '/scan-qr')),
+                  if (auth.isAdmin)
+                    _menuItem(context, Icons.qr_code_scanner_rounded, 'Scan\nQR', const Color(0xFF00897B), () => Navigator.pushNamed(context, '/scan-qr')),
                 ]),
               ])),
             ),
@@ -173,12 +188,22 @@ class DashboardTab extends StatelessWidget {
                 const SizedBox(height: 12),
                 ...queue.polyclinics.take(4).map((poli) => Container(
                   margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: AppColors.shadowLight, blurRadius: 8)]),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
+                    boxShadow: [BoxShadow(color: Color(poli.color).withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4))]),
                   child: Row(children: [
+                    // Left color accent bar
+                    Container(
+                      width: 5,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: Color(poli.color),
+                        borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
                     Container(
                       width: 44, height: 44,
-                      decoration: BoxDecoration(color: Color(poli.color).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                      decoration: BoxDecoration(color: Color(poli.color).withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
                       child: Center(child: Text(poli.icon, style: const TextStyle(fontSize: 22))),
                     ),
                     const SizedBox(width: 14),
@@ -186,10 +211,18 @@ class DashboardTab extends StatelessWidget {
                       Text(poli.name, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
                       Text(poli.description, style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textSecondary)),
                     ])),
-                    Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                      Text('Melayani', style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.textTertiary)),
-                      Text('#${poli.currentServing}', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: Color(poli.color))),
-                    ]),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(color: Color(poli.color).withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                          child: Text('#${poli.currentServing}', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w900, color: Color(poli.color))),
+                        ),
+                        const SizedBox(height: 2),
+                        Text('dilayani', style: GoogleFonts.plusJakartaSans(fontSize: 9, color: AppColors.textTertiary)),
+                      ]),
+                    ),
                   ]),
                 )),
               ])),
@@ -202,11 +235,12 @@ class DashboardTab extends StatelessWidget {
                 const SectionHeader(title: 'Informasi Kesehatan'),
                 const SizedBox(height: 12),
                 SizedBox(
-                  height: 150,
+                  height: 170,
                   child: ListView(scrollDirection: Axis.horizontal, children: [
                     _healthCard(context, 'Cuci Tangan', 'Pentingnya mencuci tangan dengan sabun untuk mencegah penyakit', Icons.clean_hands_rounded, AppColors.primary),
                     _healthCard(context, 'Vaksinasi', 'Jadwal vaksinasi anak dan dewasa tersedia di klinik', Icons.vaccines_rounded, AppColors.secondary),
                     _healthCard(context, 'Pola Hidup Sehat', 'Tips menjaga pola hidup sehat setiap hari', Icons.favorite_rounded, const Color(0xFFE91E63)),
+                    _healthCard(context, 'Kesehatan Mental', 'Jaga kesehatan mental Anda dengan istirahat cukup', Icons.psychology_rounded, const Color(0xFF7B1FA2)),
                   ]),
                 ),
               ])),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:siankes/services/auth_service.dart';
 import 'package:siankes/data/models/user_model.dart';
+import 'package:siankes/core/constants/app_constants.dart';
 
 enum AuthState { initial, loading, authenticated, unauthenticated, error }
 
@@ -143,6 +145,9 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     await _authService.logout();
+    // Reset onboarding agar muncul lagi saat buka aplikasi (bagus untuk demo)
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.prefKeyOnboarded, false);
     _user = null;
     _state = AuthState.unauthenticated;
     notifyListeners();

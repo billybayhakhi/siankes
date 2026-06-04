@@ -8,7 +8,7 @@ class DateFormatter {
   }
 
   static String formatShortDate(DateTime date) {
-    return DateFormat('dd MMM yyyy').format(date);
+    return DateFormat('dd MMM yyyy', 'id_ID').format(date);
   }
 
   static String formatTime(DateTime date) {
@@ -16,7 +16,7 @@ class DateFormatter {
   }
 
   static String formatDateTime(DateTime date) {
-    return DateFormat('dd MMM yyyy, HH:mm').format(date);
+    return DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(date);
   }
 
   static String formatDayDate(DateTime date) {

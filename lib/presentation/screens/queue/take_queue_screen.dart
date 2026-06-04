@@ -30,6 +30,12 @@ class _TakeQueueScreenState extends State<TakeQueueScreen> {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final queue = Provider.of<QueueProvider>(context, listen: false);
     final booking = Provider.of<BookingProvider>(context, listen: false);
+
+    final existingQueue = queue.getMyActiveQueueForPoli(_selectedPoliId!, auth.user!.uid);
+    if (existingQueue != null) {
+      _snack('Anda sudah memiliki antrian aktif di poli ini');
+      return;
+    }
     final poli = queue.polyclinics.firstWhere((p) => p.id == _selectedPoliId);
     final doctors = booking.getDoctorsByPoli(_selectedPoliId!);
     final doctor = _selectedDoctorId != null ? doctors.firstWhere((d) => d.id == _selectedDoctorId) : (doctors.isNotEmpty ? doctors.first : null);
@@ -178,7 +184,7 @@ class _TakeQueueScreenState extends State<TakeQueueScreen> {
                         boxShadow: [BoxShadow(color: AppColors.shadowLight, blurRadius: 8)],
                       ),
                       child: Row(children: [
-                        CircleAvatar(radius: 22, backgroundColor: AppColors.primarySurface, child: Icon(Icons.person_rounded, color: AppColors.primary)),
+                        DoctorAvatar(name: doc.name, photoUrl: doc.photoUrl, radius: 22),
                         const SizedBox(width: 14),
                         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text(doc.name, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),

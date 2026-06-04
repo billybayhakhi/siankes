@@ -300,3 +300,93 @@ class InfoCard extends StatelessWidget {
     );
   }
 }
+
+// ═══════════════════════════════════════════
+// DOCTOR AVATAR
+// Generates a colored avatar with initials when no photo is available
+// ═══════════════════════════════════════════
+class DoctorAvatar extends StatelessWidget {
+  final String name;
+  final String photoUrl;
+  final double radius;
+
+  const DoctorAvatar({
+    super.key,
+    required this.name,
+    this.photoUrl = '',
+    this.radius = 28,
+  });
+
+  /// Pick a consistent color from a curated palette based on name hash
+  Color _colorFromName(String name) {
+    const colors = [
+      Color(0xFF1565C0), // blue
+      Color(0xFF00897B), // teal
+      Color(0xFF7B1FA2), // purple
+      Color(0xFFE91E63), // pink
+      Color(0xFF00838F), // cyan
+      Color(0xFF2E7D32), // green
+      Color(0xFFF57C00), // orange
+      Color(0xFF6A1B9A), // deep purple
+    ];
+    final idx = name.codeUnits.fold(0, (a, b) => a + b) % colors.length;
+    return colors[idx];
+  }
+
+  /// Extract initials: "dr. Budi Santoso" → "BS", "drg. Siti" → "Si"
+  String _initials(String name) {
+    // Remove prefixes like dr., drg., etc.
+    final cleaned = name.replaceAll(RegExp(r'^(drg?\.|dr\s)', caseSensitive: false), '').trim();
+    final parts = cleaned.split(RegExp(r'[\s,]+'));
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    } else if (parts.isNotEmpty && parts[0].isNotEmpty) {
+      return parts[0].substring(0, parts[0].length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return '?';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _colorFromName(name);
+    final initials = _initials(name);
+    final fontSize = radius * 0.52;
+
+    if (photoUrl.isNotEmpty && photoUrl.startsWith('http')) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: color.withOpacity(0.2),
+        backgroundImage: NetworkImage(photoUrl),
+        onBackgroundImageError: (_, __) {},
+      );
+    }
+
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: color.withOpacity(0.15),
+      child: Container(
+        width: radius * 2,
+        height: radius * 2,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [color.withOpacity(0.9), color],
+          ),
+        ),
+        child: Center(
+          child: Text(
+            initials,
+            style: GoogleFonts.plusJakartaSans(
+              color: Colors.white,
+              fontSize: fontSize,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

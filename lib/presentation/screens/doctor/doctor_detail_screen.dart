@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:siankes/core/theme/app_colors.dart';
 import 'package:siankes/data/models/doctor_model.dart';
+import '../../widgets/shared_widgets.dart';
 
 class DoctorDetailScreen extends StatelessWidget {
   final DoctorModel doctor;
@@ -28,9 +29,10 @@ class DoctorDetailScreen extends StatelessWidget {
               const SizedBox(width: 48),
             ]),
             const SizedBox(height: 20),
-            FadeInDown(child: CircleAvatar(
-              radius: 48, backgroundColor: Colors.white.withOpacity(0.2),
-              child: const Icon(Icons.person_rounded, color: Colors.white, size: 52),
+            FadeInDown(child: DoctorAvatar(
+              name: doctor.name,
+              photoUrl: doctor.photoUrl,
+              radius: 48,
             )),
             const SizedBox(height: 14),
             FadeInDown(delay: const Duration(milliseconds: 150), child: Text(doctor.name, style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white), textAlign: TextAlign.center)),
@@ -38,12 +40,16 @@ class DoctorDetailScreen extends StatelessWidget {
             FadeInDown(delay: const Duration(milliseconds: 200), child: Text(doctor.specialization, style: GoogleFonts.plusJakartaSans(fontSize: 14, color: Colors.white70))),
             const SizedBox(height: 12),
             FadeInUp(delay: const Duration(milliseconds: 250), child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _headerStat(Icons.star_rounded, '${doctor.rating}', Colors.amber),
-              const SizedBox(width: 24),
-              _headerStat(Icons.work_history_rounded, doctor.experience, Colors.white),
-              const SizedBox(width: 24),
+              _headerStat(Icons.star_rounded, '${doctor.rating}', Colors.amber, 'Rating'),
+              const SizedBox(width: 16),
+              Container(width: 1, height: 36, color: Colors.white24),
+              const SizedBox(width: 16),
+              _headerStat(Icons.work_history_rounded, doctor.experience, Colors.white, 'Pengalaman'),
+              const SizedBox(width: 16),
+              Container(width: 1, height: 36, color: Colors.white24),
+              const SizedBox(width: 16),
               _headerStat(doctor.isAvailable ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                  doctor.isAvailable ? 'Tersedia' : 'Tidak', doctor.isAvailable ? Colors.greenAccent : Colors.redAccent),
+                  doctor.isAvailable ? 'Tersedia' : 'Libur', doctor.isAvailable ? Colors.greenAccent : Colors.redAccent, 'Status'),
             ])),
           ])),
         ),
@@ -84,25 +90,48 @@ class DoctorDetailScreen extends StatelessWidget {
               ]),
             )),
             const SizedBox(height: 24),
-            // Booking Button
-            FadeInUp(delay: const Duration(milliseconds: 700), child: SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: doctor.isAvailable ? AppColors.primaryGradient : null,
-                  color: doctor.isAvailable ? null : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: doctor.isAvailable ? [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))] : null,
-                ),
-                child: ElevatedButton.icon(
-                  onPressed: doctor.isAvailable ? () => Navigator.pushNamed(context, '/booking') : null,
-                  icon: const Icon(Icons.event_available_rounded, color: Colors.white),
-                  label: Text('Booking Jadwal', style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent, shadowColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+            // Action Buttons Row
+            FadeInUp(delay: const Duration(milliseconds: 700), child: Column(children: [
+              // Take Queue Button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: doctor.isAvailable ? AppColors.cardGradient : null,
+                    color: doctor.isAvailable ? null : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: doctor.isAvailable ? [BoxShadow(color: AppColors.primary.withOpacity(0.25), blurRadius: 10, offset: const Offset(0, 5))] : null,
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: doctor.isAvailable ? () => Navigator.pushNamed(context, '/take-queue') : null,
+                    icon: const Icon(Icons.confirmation_number_rounded, color: Colors.white, size: 20),
+                    label: Text('Ambil Antrian Sekarang', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent, shadowColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                  ),
                 ),
               ),
-            )),
+              const SizedBox(height: 12),
+              // Booking Button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: doctor.isAvailable ? AppColors.primaryGradient : null,
+                    color: doctor.isAvailable ? null : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: doctor.isAvailable ? [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))] : null,
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: doctor.isAvailable ? () => Navigator.pushNamed(context, '/booking') : null,
+                    icon: const Icon(Icons.event_available_rounded, color: Colors.white, size: 20),
+                    label: Text('Booking Jadwal', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent, shadowColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                  ),
+                ),
+              ),
+            ])),
             const SizedBox(height: 30),
           ]),
         )),
@@ -110,11 +139,16 @@ class DoctorDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _headerStat(IconData icon, String label, Color color) {
+  Widget _headerStat(IconData icon, String label, Color color, String subLabel) {
     return Column(children: [
-      Icon(icon, color: color, size: 20),
-      const SizedBox(height: 4),
-      Text(label, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+      Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+        child: Icon(icon, color: color, size: 20),
+      ),
+      const SizedBox(height: 6),
+      Text(label, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+      Text(subLabel, style: GoogleFonts.plusJakartaSans(color: Colors.white60, fontSize: 10)),
     ]);
   }
 

@@ -6,6 +6,7 @@ import 'package:siankes/core/theme/app_colors.dart';
 import 'package:siankes/core/utils/date_formatter.dart';
 import 'package:siankes/presentation/providers/queue_provider.dart';
 import 'package:siankes/presentation/providers/booking_provider.dart';
+import 'package:siankes/presentation/providers/auth_provider.dart';
 import 'package:siankes/services/notification_service.dart';
 import '../../widgets/shared_widgets.dart';
 
@@ -43,6 +44,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               icon: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white),
               onPressed: () => Navigator.pushNamed(context, '/scan-qr'),
               tooltip: 'Scan QR',
+            ),
+            IconButton(
+              icon: const Icon(Icons.logout_rounded, color: Colors.white),
+              tooltip: 'Keluar',
+              onPressed: () {
+                showDialog(context: context, builder: (ctx) => AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  title: Text('Keluar?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                  content: Text('Anda yakin ingin keluar dari Panel Admin?', style: GoogleFonts.plusJakartaSans()),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+                    TextButton(onPressed: () { 
+                      Navigator.pop(ctx); 
+                      Provider.of<AuthProvider>(context, listen: false).logout(); 
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Admin berhasil keluar.', style: GoogleFonts.plusJakartaSans()), 
+                          backgroundColor: AppColors.success,
+                          behavior: SnackBarBehavior.floating,
+                        )
+                      );
+                      Navigator.pushReplacementNamed(context, '/'); 
+                    }, child: Text('Keluar', style: GoogleFonts.plusJakartaSans(color: AppColors.error, fontWeight: FontWeight.w700))),
+                  ],
+                ));
+              },
             ),
           ],
           bottom: TabBar(
@@ -135,15 +162,88 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 await _notifService.sendQueueAlmostCalledNotification(userId: nextQueue.userId, queueNumber: nextQueue.queueNumber, remaining: 1);
               }
             }
-            messenger.showSnackBar(const SnackBar(content: Text('Pasien berikutnya dipanggil'), backgroundColor: AppColors.success));
+            messenger.showSnackBar(SnackBar(
+              content: Row(children: [
+                const Icon(Icons.campaign_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                const Text('Pasien berikutnya dipanggil!'),
+              ]),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ));
           },
           child: Container(
-            width: double.infinity, height: 60,
-            decoration: BoxDecoration(gradient: AppColors.successGradient, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: AppColors.success.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))]),
+            width: double.infinity, height: 62,
+            decoration: BoxDecoration(
+              gradient: AppColors.successGradient,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [BoxShadow(color: AppColors.success.withOpacity(0.4), blurRadius: 16, offset: const Offset(0, 6))],
+            ),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const Icon(Icons.campaign_rounded, color: Colors.white, size: 26),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                child: const Icon(Icons.campaign_rounded, color: Colors.white, size: 24),
+              ),
               const SizedBox(width: 12),
-              Text('PANGGIL BERIKUTNYA', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15, letterSpacing: 0.5)),
+              Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('PANGGIL BERIKUTNYA', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 0.5)),
+                Text('Tap untuk memanggil pasien selanjutnya', style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 10)),
+              ]),
+            ]),
+          ),
+        )),
+        const SizedBox(height: 12),
+        // Reset Antrian Button
+        Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: GestureDetector(
+          onTap: () => showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Row(children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                const SizedBox(width: 8),
+                Text('Reset Antrian?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+              ]),
+              content: Text(
+                'Semua antrian ${currentPoli?.name ?? ''} hari ini akan dihapus dan nomor antrian direset ke 0.\n\nLakukan ini sebelum demo ulang.',
+                style: GoogleFonts.plusJakartaSans(fontSize: 13),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('Batal', style: GoogleFonts.plusJakartaSans()),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    await qp.resetPoli(_selectedPoliId);
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Antrian ${currentPoli?.name ?? ''} berhasil direset', style: GoogleFonts.plusJakartaSans()),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  },
+                  child: Text('Ya, Reset', style: GoogleFonts.plusJakartaSans(color: Colors.orange, fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ),
+          ),
+          child: Container(
+            width: double.infinity, height: 50,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.orange, width: 1.5),
+              boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.15), blurRadius: 8, offset: const Offset(0, 4))],
+            ),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const Icon(Icons.restart_alt_rounded, color: Colors.orange, size: 22),
+              const SizedBox(width: 10),
+              Text('RESET ANTRIAN', style: GoogleFonts.plusJakartaSans(color: Colors.orange, fontWeight: FontWeight.w800, fontSize: 14, letterSpacing: 0.5)),
             ]),
           ),
         )),
@@ -156,7 +256,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Text('Daftar Antrian', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 14),
             poliQueues.isEmpty
-                ? const EmptyStateWidget(icon: Icons.checklist_rounded, title: 'Tidak Ada Antrian', subtitle: 'Belum ada pasien')
+                ? const EmptyStateWidget(icon: Icons.checklist_rounded, title: 'Tidak Ada Antrian', subtitle: 'Belum ada pasien menunggu')
                 : ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -166,25 +266,43 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       return FadeInUp(
                         delay: Duration(milliseconds: i * 50),
                         child: Container(
-                          margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14),
+                          margin: const EdgeInsets.only(bottom: 10),
                           decoration: BoxDecoration(
-                            color: q.isCalled ? AppColors.successLight : AppColors.surfaceVariant,
+                            color: q.isCalled ? AppColors.successLight : Colors.white,
                             borderRadius: BorderRadius.circular(16),
-                            border: q.isCalled ? Border.all(color: AppColors.success, width: 1.5) : null,
+                            border: q.isCalled ? Border.all(color: AppColors.success, width: 1.5) : Border.all(color: AppColors.border, width: 1),
+                            boxShadow: [BoxShadow(color: q.isCalled ? AppColors.success.withOpacity(0.1) : AppColors.shadowLight, blurRadius: 8, offset: const Offset(0, 3))],
                           ),
                           child: Row(children: [
+                            // Position number side
                             Container(
-                              width: 46, height: 46,
-                              decoration: BoxDecoration(color: q.isCalled ? AppColors.success : AppColors.primary, borderRadius: BorderRadius.circular(12)),
-                              child: Center(child: Text(q.queueNumber, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13))),
+                              width: 56,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: q.isCalled ? AppColors.success : AppColors.primary,
+                                borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
+                              ),
+                              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                Text(q.queueNumber, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
+                                Text('#${i + 1}', style: GoogleFonts.plusJakartaSans(color: Colors.white60, fontSize: 10)),
+                              ]),
                             ),
                             const SizedBox(width: 14),
                             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text(q.userName, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
                               Text(q.complaint, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary)),
                             ])),
-                            if (q.isWaiting) IconButton(icon: const Icon(Icons.skip_next_rounded, color: AppColors.error), onPressed: () => qp.skipPatient(q.id)),
-                            StatusBadge(status: q.status),
+                            Row(children: [
+                              if (q.isWaiting) IconButton(
+                                icon: const Icon(Icons.skip_next_rounded, color: AppColors.error),
+                                tooltip: 'Lewati',
+                                onPressed: () => qp.skipPatient(q.id),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 10),
+                                child: StatusBadge(status: q.status),
+                              ),
+                            ]),
                           ]),
                         ),
                       );

@@ -55,13 +55,17 @@ class ProfileTab extends StatelessWidget {
               ],
               const SizedBox(height: 20),
               // Stats row
-              Row(children: [
-                _statItem('Antrian', '${queue.myQueues.length}', Icons.confirmation_number_outlined),
-                Container(width: 1, height: 40, color: Colors.white24),
-                _statItem('Booking', '${booking.bookings.length}', Icons.calendar_month_outlined),
-                Container(width: 1, height: 40, color: Colors.white24),
-                _statItem('Selesai', '${queue.myQueues.where((q) => q.isDone).length}', Icons.check_circle_outline),
-              ]),
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+                child: Row(children: [
+                  _statItem('Antrian', '${queue.myQueues.length}', Icons.confirmation_number_outlined),
+                  Container(width: 1, height: 40, color: Colors.white24),
+                  _statItem('Booking', '${booking.bookings.length}', Icons.calendar_month_outlined),
+                  Container(width: 1, height: 40, color: Colors.white24),
+                  _statItem('Selesai', '${queue.myQueues.where((q) => q.isDone).length}', Icons.check_circle_outline),
+                ]),
+              ),
             ]),
           ),
           const SizedBox(height: 20),
@@ -77,16 +81,27 @@ class ProfileTab extends StatelessWidget {
               FadeInUp(delay: const Duration(milliseconds: 350), child: _menuCard(context, Icons.info_outline_rounded, 'Tentang Aplikasi', 'SIANKES v${AppConstants.appVersion}', () => _showAbout(context))),
               const SizedBox(height: 12),
               // Logout
-              FadeInUp(delay: const Duration(milliseconds: 400), child: GestureDetector(
-                onTap: () => _confirmLogout(context, auth),
-                child: Container(
-                  width: double.infinity, padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: AppColors.errorLight, borderRadius: BorderRadius.circular(16)),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    const Icon(Icons.logout_rounded, color: AppColors.error, size: 20),
-                    const SizedBox(width: 10),
-                    Text('Keluar', style: GoogleFonts.plusJakartaSans(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 15)),
-                  ]),
+              FadeInUp(delay: const Duration(milliseconds: 400), child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.errorLight,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.error.withOpacity(0.2)),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  child: InkWell(
+                    onTap: () => _confirmLogout(context, auth),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        const Icon(Icons.logout_rounded, color: AppColors.error, size: 20),
+                        const SizedBox(width: 10),
+                        Text('Keluar dari Akun', style: GoogleFonts.plusJakartaSans(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 15)),
+                      ]),
+                    ),
+                  ),
                 ),
               )),
             ]),
@@ -133,7 +148,18 @@ class ProfileTab extends StatelessWidget {
       content: Text('Anda yakin ingin keluar dari akun?', style: GoogleFonts.plusJakartaSans()),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
-        TextButton(onPressed: () { Navigator.pop(ctx); auth.logout(); Navigator.pushReplacementNamed(context, '/login'); }, child: Text('Keluar', style: GoogleFonts.plusJakartaSans(color: AppColors.error, fontWeight: FontWeight.w700))),
+        TextButton(onPressed: () { 
+          Navigator.pop(ctx); 
+          auth.logout(); 
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Anda telah berhasil keluar.', style: GoogleFonts.plusJakartaSans()), 
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            )
+          );
+          Navigator.pushReplacementNamed(context, '/'); 
+        }, child: Text('Keluar', style: GoogleFonts.plusJakartaSans(color: AppColors.error, fontWeight: FontWeight.w700))),
       ],
     ));
   }

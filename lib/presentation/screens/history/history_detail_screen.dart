@@ -84,13 +84,56 @@ class HistoryDetailScreen extends StatelessWidget {
       if (q.qrData.isNotEmpty) ...[
         const SizedBox(height: 16),
         FadeInUp(delay: const Duration(milliseconds: 600), child: Container(
-          width: double.infinity, padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: AppColors.shadowLight, blurRadius: 12, offset: const Offset(0, 4))]),
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [BoxShadow(color: AppColors.shadowLight, blurRadius: 12, offset: const Offset(0, 4))],
+          ),
           child: Column(children: [
-            Text('QR Code', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
-            QrImageView(data: q.qrData, size: 160, version: QrVersions.auto),
+            // Premium header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: const BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+              ),
+              child: Row(children: [
+                const Icon(Icons.qr_code_2_rounded, color: Colors.white, size: 22),
+                const SizedBox(width: 10),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Digital ID Kunjungan', style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)),
+                  Text('Scan untuk Farmasi / Kasir', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: Colors.white70)),
+                ]),
+              ]),
+            ),
+            // QR Code
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border, width: 1.5),
+                    boxShadow: [BoxShadow(color: AppColors.primarySurface, blurRadius: 0, spreadRadius: 6)],
+                  ),
+                  child: QrImageView(data: q.qrData, size: 170, version: QrVersions.auto),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(color: AppColors.infoLight, borderRadius: BorderRadius.circular(12)),
+                  child: Row(children: [
+                    const Icon(Icons.info_outline_rounded, color: AppColors.info, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text('Tunjukkan barcode ini ke petugas Farmasi atau Kasir setelah keluar dari ruang dokter.', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.info, height: 1.4))),
+                  ]),
+                ),
+              ]),
+            ),
           ]),
         )),
       ],
